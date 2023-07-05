@@ -78,8 +78,8 @@ const handleNoteSave = () => {
 };
 
 // Delete the clicked note
+// Delete the clicked note
 const handleNoteDelete = (e) => {
-  // Prevents the click listener for the list from being called when the button inside of it is clicked
   e.stopPropagation();
 
   const note = e.target;
@@ -87,13 +87,18 @@ const handleNoteDelete = (e) => {
 
   if (activeNote.id === noteId) {
     activeNote = {};
+    renderActiveNote();
   }
 
-  deleteNote(noteId).then(() => {
-    getAndRenderNotes();
-    renderActiveNote();
-  });
+  deleteNote(noteId)
+    .then(() => {
+      getAndRenderNotes();
+    })
+    .catch((error) => {
+      console.error('An error occurred while deleting the note:', error);
+    });
 };
+
 
 // Sets the activeNote and displays it
 const handleNoteView = (e) => {
@@ -119,56 +124,65 @@ const handleRenderSaveBtn = () => {
 // Render the list of note titles
 const renderNoteList = async (notes) => {
   let jsonNotes = await notes.json();
+
   if (window.location.pathname === '/notes') {
     noteList.forEach((el) => (el.innerHTML = ''));
   }
 
   let noteListItems = [];
 
-  // Returns HTML element with or without a delete button
-  const createLi = (text, delBtn = true) => {
-    const liEl = document.createElement('li');
-    liEl.classList.add('list-group-item');
-
-    const spanEl = document.createElement('span');
-    spanEl.classList.add('list-item-title');
-    spanEl.innerText = text;
-    spanEl.addEventListener('click', handleNoteView);
-
-    liEl.append(spanEl);
-
+  const createLi = (text, delBtn = true, noteId) => {
+    const li = document.createElement('li');
+    li.classList.add('list-group-item');
+  
+    const span = document.createElement('span');
+    span.innerText = text;
+    span.addEventListener('click', handleNoteView);
+  
+    li.appendChild(span);
+  
     if (delBtn) {
-      const delBtnEl = document.createElement('i');
-      delBtnEl.classList.add(
+      const delBtn = document.createElement('i');
+      delBtn.classList.add(
         'fas',
         'fa-trash-alt',
         'float-right',
         'text-danger',
         'delete-note'
       );
-      delBtnEl.addEventListener('click', handleNoteDelete);
-
-      liEl.append(delBtnEl);
+      delBtn.addEventListener('click', handleNoteDelete);
+      delBtn.dataset.noteId = noteId; // Assign note ID as a data attribute
+  
+      li.appendChild(delBtn);
     }
-
-    return liEl;
+  
+    return li;
   };
+  
+  
 
   if (jsonNotes.length === 0) {
     noteListItems.push(createLi('No saved Notes', false));
   }
 
   jsonNotes.forEach((note) => {
-    const li = createLi(note.title);
-    li.dataset.note = JSON.stringify(note);
-
+    const li = createLi(note.title, true, note.id);
     noteListItems.push(li);
   });
+  
+  
 
   if (window.location.pathname === '/notes') {
     noteListItems.forEach((note) => noteList[0].append(note));
   }
+
+  // Remove the deleted note from the UI
+  if (activeNote.id && !jsonNotes.some((note) => note.id === activeNote.id)) {
+    activeNote = {};
+    renderActiveNote();
+  }
 };
+
 
 // Gets notes from the db and renders them to the sidebar
 const getAndRenderNotes = () => getNotes().then(renderNoteList);

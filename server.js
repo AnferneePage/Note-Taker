@@ -21,11 +21,19 @@ app.post('/api/notes', (req, res) => {
 });
 
 // Route for deleting a note
+// Route for deleting a note
 app.delete('/api/notes/:id', (req, res) => {
   const noteId = req.params.id;
-  notes = notes.filter((note) => note.id !== noteId);
-  res.sendStatus(204);
+  data = data.filter((note) => note.id !== noteId);
+  fs.writeFile("./db/db.json", JSON.stringify(data), (err) => {
+    if (err) {
+      res.status(500).send("Error writing to the database");
+    } else {
+      res.sendStatus(204);
+    }
+  });
 });
+
 
 // Serve static files from the "public" directory
 app.use(express.static(__dirname + '/public'));
