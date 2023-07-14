@@ -47,9 +47,11 @@ app.get('/notes', (req, res) => {
   res.sendFile(__dirname + '/public/notes.html');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+const port = process.env.PORT || 3001;
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
 });
+
 
 
 
